@@ -1,70 +1,78 @@
-# Chrome Extension TypeScript Starter
+# TabCloser
 
-![build](https://github.com/chibat/chrome-extension-typescript-starter/workflows/build/badge.svg)
+![build](https://github.com/TabCloser/tabcloser/workflows/build/badge.svg)
 
-Chrome Extension, TypeScript and Visual Studio Code
+Chrome Extension for closing out those pesky, leftover windows that occur when a link is opened within an app other than the browser.
 
-## Prerequisites
+## Officially Supported Apps/Websites
+
+* Figma
+* Spotify
+* Zoom 
+
+## Example Links
+
+https://www.figma.com/app_auth/bfa73036-e7fc-442a-bc78-7eaa3d275012/grant?desktop_protocol=figma&fuid=880567443010618669
+https://www.figma.com/file/XtT2KTNtVPxSFmOzbHheLC/Closing-Figma-Tabs?node-id=0%3A1
+https://open.spotify.com/album/4WsroDqYcqI1DpRgRAwqF2?si=Rscu9SG4R22pay5OkYtelA&nd=1
+
+## Developer Info
+
+### Prerequisites
 
 * [node + npm](https://nodejs.org/) (Current Version)
 
-## Option
-
-* [Visual Studio Code](https://code.visualstudio.com/)
-
-## Includes the following
-
-* TypeScript
-* Webpack
-* React
-* Jest
-* Example Code
-    * Chrome Storage
-    * Options Version 2
-    * content script
-    * count up badge number
-    * background
-
-## Project Structure
+### Project Structure
 
 * src/typescript: TypeScript source files
 * src/assets: static files
 * dist: Chrome Extension directory
 * dist/js: Generated JavaScript files
 
-## Setup
+## Types
+
+```typescript
+interface Plugin {
+  regex: string/Regex
+  // in seconds
+  timeout?: number
+  toggles: { [key: string]: boolean }
+}
+
+interface Plugins {
+  [key: string]: Plugin
+}
+```
+
+### Setup
 
 ```
 npm install
 ```
 
-## Import as Visual Studio Code project
-
-...
-
-## Build
+### Build
 
 ```
 npm run build
 ```
 
-## Build in watch mode
+### Build in watch mode
 
-### terminal
+#### terminal
 
 ```
 npm run watch
 ```
 
-### Visual Studio Code
+#### Visual Studio Code
 
 Run watch mode.
 
 type `Ctrl + Shift + B`
 
-## Load extension to chrome
+### Load extension to chrome
 
 Load `dist` directory
 
-## Test
+### Test
 `npx jest` or `npm run test`
