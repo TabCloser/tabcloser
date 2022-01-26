@@ -17,6 +17,7 @@
     }
   ],
   "background": {
+    "background.html": "background.html",
     "service_worker": "js/background.js"
   },
   "permissions": ["storage"],

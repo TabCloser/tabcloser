@@ -1,9 +1,14 @@
-import { TabCloserPlugin, TabCloserPlugins, TabCloserToggles } from './types'
+import {
+  DEFAULT_PLUGINS,
+  TabCloserPlugin,
+  TabCloserPlugins,
+  TabCloserToggles
+} from './types'
 
 export async function initPlugin(
   pluginName: string,
   localizedName: string,
-  regex: RegExp[],
+  regex: string[],
   toggles: TabCloserToggles
 ) {
   const plugins = (await chrome.storage.sync.get('plugins')) as TabCloserPlugins
@@ -15,7 +20,10 @@ export async function initPlugin(
 }
 
 export async function getPlugins() {
-  return (await chrome.storage.sync.get('plugins')) as TabCloserPlugins
+  const { plugins } = await chrome.storage.sync.get({
+    plugins: DEFAULT_PLUGINS
+  })
+  return plugins
 }
 
 export async function getPlugin(pluginName: string) {
@@ -28,14 +36,12 @@ export function matchUrl(
 ): TabCloserPlugin | undefined {
   let plugin: TabCloserPlugin | undefined = undefined
   Object.keys(plugins).map(pluginName => {
-    plugin = !!plugin
-      ? plugin
-      : plugins[pluginName].regex.reduce(
-          (accum, curr) => accum && curr.test(url),
-          false
-        )
-      ? plugins[pluginName]
-      : undefined
+    if (!plugin) {
+      const matchesUrl = plugins[pluginName].regex.reduce((accum, curr) => {
+        return accum || new RegExp(curr).test(url)
+      }, false)
+      if (matchesUrl) plugin = plugins[pluginName]
+    }
   })
   return plugin
 }
@@ -52,17 +58,18 @@ export function setIntervalWithTimeout(
   callback?: CallableFunction,
   finalCallback?: CallableFunction
 ) {
-  let counter: number
-  const t = setInterval(() => {
-    updateTime()
-  }, interval)
+  let counter: number = 0
   const updateTime = () => {
+    if (counter === 0) {
+      console.info('[TabCloser] began timeout counting')
+    }
     if (counter === executions) {
       clearInterval(t)
       if (finalCallback) {
         finalCallback()
       }
     } else {
+      console.info('[TabCloser] timeout counted:', counter)
       counter++
       const msg = {
         remainingCountdown: executions - counter
@@ -74,4 +81,7 @@ export function setIntervalWithTimeout(
       }
     }
   }
+  const t = setInterval(() => {
+    updateTime()
+  }, interval)
 }
