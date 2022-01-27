@@ -19,11 +19,27 @@ export async function initPlugin(
   }
 }
 
+export async function setToggleValue(
+  plugin: string,
+  toggle: string,
+  value: boolean | number
+) {
+  await chrome.storage.sync.set({
+    [plugin]: {
+      toggles: {
+        [toggle]: {
+          value: value
+        }
+      }
+    }
+  })
+}
+
 export async function getPlugins() {
   const { plugins } = await chrome.storage.sync.get({
     plugins: DEFAULT_PLUGINS
   })
-  return plugins
+  return plugins as TabCloserPlugins
 }
 
 export async function getPlugin(pluginName: string) {
@@ -35,7 +51,7 @@ export function matchUrl(
   plugins: TabCloserPlugins
 ): TabCloserPlugin | undefined {
   let plugin: TabCloserPlugin | undefined = undefined
-  Object.keys(plugins).map(pluginName => {
+  Object.keys(plugins).map((pluginName) => {
     if (!plugin) {
       const matchesUrl = plugins[pluginName].regex.reduce((accum, curr) => {
         return accum || new RegExp(curr).test(url)
@@ -50,7 +66,8 @@ export function matchUrl(
  *
  * @param interval Interval
  * @param executions Number of executions until timeout
- * @param callback Callback to execute once finished.
+ * @param callback Callback to execute each execution until finished.
+ * @param finalCallback Callback to execute once finished.
  */
 export function setIntervalWithTimeout(
   interval: number,

@@ -1,51 +1,140 @@
 import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom'
+import {
+  Box,
+  Button,
+  FormControlLabel,
+  FormGroup,
+  Slider,
+  Switch,
+  Tab,
+  TextField,
+  ThemeProvider
+} from '@mui/material'
+import { TabContext, TabList, TabPanel } from '@mui/lab'
+import { getPlugins, setToggleValue } from './functions'
+import { TabCloserPlugins } from './types'
+import { THEME } from './theme'
 
-const Popup = () => {
-  const [count, setCount] = useState(0)
-  const [currentURL, setCurrentURL] = useState<string>()
+export default function Popup() {
+  const [currentTabIndex, setCurrentTabIndex] = useState('1')
+  const [plugins, setPlugins] = useState<TabCloserPlugins>({})
 
-  useEffect(() => {
-    chrome.action.setBadgeText({ text: count.toString() })
-  }, [count])
-
-  useEffect(() => {
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      setCurrentURL(tabs[0].url)
-    })
-  }, [])
-
-  const changeBackground = () => {
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      const tab = tabs[0]
-      if (tab.id) {
-        chrome.tabs.sendMessage(
-          tab.id,
-          {
-            color: '#555555'
-          },
-          msg => {
-            console.log('result message:', msg)
-          }
-        )
-      }
-    })
+  const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
+    setCurrentTabIndex(newValue)
   }
 
+  useEffect(() => {
+    getPluginsFromStorage()
+  })
+
+  const getPluginsFromStorage = async () => {
+    const plugins = await getPlugins()
+    Object.keys(plugins).forEach((plugin) =>
+      Object.keys(plugins[plugin].toggles).forEach(
+        (toggle) =>
+          (plugins[plugin].toggles[toggle].text = plugins[plugin].toggles[
+            toggle
+          ].text.replace('%%PLUGIN_NAME%%', plugins[plugin].name))
+      )
+    )
+    setPlugins(plugins)
+  }
+
+  const tabs = Object.keys(plugins).reduceRight((accum, plugin, index) => {
+    const tab = (
+      <Tab
+        key={index.toString()}
+        label={plugins[plugin].name}
+        value={index.toString()}
+      />
+    )
+    return [...accum, tab]
+  }, [] as JSX.Element[])
+
+  const sliderAriaValueText = (value: number) => {
+    return `${value}`
+  }
+
+  const savePlugin = (plugin: string, toggleChanges) => {}
+
+  const tabPanels = Object.keys(plugins).reduceRight((accum, plugin, index) => {
+    const controls = Object.keys(plugins[plugin].toggles).map((toggleName) => {
+      const toggle = plugins[plugin].toggles[toggleName]
+      switch (toggle.control) {
+        case 'slider': {
+          return (
+            <FormControlLabel
+              key={toggleName + '-label'}
+              control={
+                <Slider
+                  aria-label={toggle.text}
+                  defaultValue={toggle.value as number}
+                  getAriaValueText={sliderAriaValueText}
+                  valueLabelDisplay="auto"
+                  step={1}
+                  marks
+                  min={0}
+                  max={10}
+                />
+              }
+              label={
+                <span>
+                  {toggle.text}{' '}
+                  <TextField
+                    id={toggle + '-label'}
+                    type="number"
+                    InputLabelProps={{
+                      shrink: true
+                    }}
+                    defaultValue={toggle.value as number}
+                  />{' '}
+                  {toggle.sliderUnits}
+                </span>
+              }
+            />
+          )
+        }
+        case 'switch': {
+          return (
+            <FormControlLabel
+              key={toggleName + '-label'}
+              control={<Switch defaultChecked={toggle.value as boolean} />}
+              label={toggle.text}
+              aria-label={toggle.text}
+            />
+          )
+        }
+      }
+    })
+    const tabPanel = (
+      <TabPanel key={index.toString()} value={index.toString()}>
+        Options for {plugins[plugin].name}
+        <FormGroup>{controls}</FormGroup>
+        <Button variant="contained" onClick={() => savePlugin(plugin, {})}>
+          Save
+        </Button>
+      </TabPanel>
+    )
+    return [...accum, tabPanel]
+  }, [] as JSX.Element[])
+
   return (
-    <>
-      <ul style={{ minWidth: '700px' }}>
-        <li>Current URL: {currentURL}</li>
-        <li>Current Time: {new Date().toLocaleTimeString()}</li>
-      </ul>
-      <button
-        onClick={() => setCount(count + 1)}
-        style={{ marginRight: '5px' }}
-      >
-        count up
-      </button>
-      <button onClick={changeBackground}>change background</button>
-    </>
+    <ThemeProvider theme={THEME}>
+      <Box sx={{ width: '100%', typography: 'body1' }}>
+        <TabContext value={currentTabIndex}>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <TabList
+              onChange={handleTabChange}
+              aria-label="TabCloser options tab"
+            >
+              {tabs}
+            </TabList>
+          </Box>
+          {tabPanels}
+        </TabContext>
+      </Box>
+    </ThemeProvider>
   )
 }
 

@@ -9,12 +9,10 @@ const Options = () => {
   useEffect(() => {
     // Restores select box and checkbox state using the preferences
     // stored in chrome.storage.
-    chrome.storage.sync.get('plugins',
-      items => {
-        setColor(items.favoriteColor)
-        setLike(items.likesColor)
-      }
-    )
+    chrome.storage.sync.get('plugins', (items) => {
+      setColor(items.favoriteColor)
+      setLike(items.likesColor)
+    })
   }, [])
 
   const saveOptions = () => {
@@ -39,7 +37,10 @@ const Options = () => {
     <>
       <div>
         Favorite color:{' '}
-        <select value={color} onChange={event => setColor(event.target.value)}>
+        <select
+          value={color}
+          onChange={(event) => setColor(event.target.value)}
+        >
           <option value="red">red</option>
           <option value="green">green</option>
           <option value="blue">blue</option>
@@ -51,7 +52,7 @@ const Options = () => {
           <input
             type="checkbox"
             checked={like}
-            onChange={event => setLike(event.target.checked)}
+            onChange={(event) => setLike(event.target.checked)}
           />
           I like colors.
         </label>
